@@ -44,8 +44,23 @@ const passwordResetLimiter = rateLimit({
   legacyHeaders: false,
 });
 
+/**
+ * AI API rate limiter specifically designed for the Hackathon MVP
+ */
+const aiLimiter = rateLimit({
+  windowMs: 5 * 60 * 1000, // 5 minutes
+  max: 35, // 35 messages max per window
+  message: {
+    success: false,
+    message: 'AI usage limit reached. Please wait a few minutes before asking more questions.',
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 module.exports = {
   authLimiter,
   apiLimiter,
   passwordResetLimiter,
+  aiLimiter,
 };

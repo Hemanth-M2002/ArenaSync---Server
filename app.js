@@ -55,10 +55,14 @@ app.get('/health', (req, res) => {
   });
 });
 
+const ticketRoutes = require('./routes/ticketRoutes');
+
 // API Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/users', userRoutes);
-app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/auth', require('./routes/authRoutes'));
+app.use('/api/users', require('./routes/userRoutes'));
+app.use('/api/dashboard', require('./routes/dashboardRoutes'));
+app.use('/api/tickets', require('./routes/ticketRoutes'));
+app.use('/api/ai', require('./routes/aiRoutes'));
 
 // 404 handler for undefined routes
 app.use((req, res) => {
