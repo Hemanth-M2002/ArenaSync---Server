@@ -63,6 +63,8 @@ app.use('/api/users', require('./routes/userRoutes'));
 app.use('/api/dashboard', require('./routes/dashboardRoutes'));
 app.use('/api/tickets', require('./routes/ticketRoutes'));
 app.use('/api/ai', require('./routes/aiRoutes'));
+app.use('/api/analytics', require('./routes/analyticsRoutes'));
+app.use('/api/admin', require('./routes/adminRoutes'));
 
 // 404 handler for undefined routes
 app.use((req, res) => {

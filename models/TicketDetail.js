@@ -23,6 +23,13 @@ const ticketDetailSchema = new mongoose.Schema(
       required: true,
       default: 'Cricket',
     },
+    // Only relevant when category === 'Cricket'. Stores the league (IPL / TNPL).
+    cricketLeague: {
+      type: String,
+      enum: ['IPL', 'TNPL', null],
+      default: null,
+      trim: true,
+    },
     eventName: {
       type: String,
       required: true,

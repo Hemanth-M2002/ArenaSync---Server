@@ -10,6 +10,7 @@ const registerTicket = async (req, res, next) => {
       ticketType, 
       bookingId, 
       category, 
+      cricketLeague,   // IPL | TNPL — only sent when category === 'Cricket'
       eventName, 
       venueName, 
       eventDate, 
@@ -17,6 +18,19 @@ const registerTicket = async (req, res, next) => {
       stand, 
       seat 
     } = req.body;
+
+    // ── Cricket League Guard ────────────────────────────────────────────────
+    // If the sport is Cricket, the user MUST pick IPL or TNPL on the frontend.
+    // Any other value (or missing value) is rejected before even hitting the DB.
+    if (category === 'Cricket') {
+      const validLeagues = ['IPL', 'TNPL'];
+      if (!cricketLeague || !validLeagues.includes(cricketLeague)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid Cricket League. Please select either IPL or TNPL on your ticket.',
+        });
+      }
+    }
     
     // 1. Simulate a 3rd-party ticket verification delay
     await new Promise(resolve => setTimeout(resolve, 2000));
@@ -37,6 +51,19 @@ const registerTicket = async (req, res, next) => {
 
     if (ticket.category !== category) {
       return res.status(400).json({ success: false, message: `Category mismatch: The provided sport category is incorrect.` });
+    }
+
+    // ── Cricket League DB Verification ─────────────────────────────────────
+    // If the DB record has a cricketLeague stored, it must match what the user submitted.
+    // If the DB record has no cricketLeague yet (legacy data), we skip this check
+    // (the migration script below will backfill those records).
+    if (category === 'Cricket' && ticket.cricketLeague) {
+      if (ticket.cricketLeague !== cricketLeague) {
+        return res.status(400).json({
+          success: false,
+          message: `Wrong Cricket League: This ticket is for ${ticket.cricketLeague}, not ${cricketLeague}. Please select the correct league.`,
+        });
+      }
     }
     
     if (ticket.venueName !== venueName) {
@@ -67,9 +94,14 @@ const registerTicket = async (req, res, next) => {
       return res.status(400).json({ success: false, message: `Incorrect Seat Number provided.` });
     }
 
+    // ── Success message ─────────────────────────────────────────────────────
     let successMsg = 'Ticket authenticated and registered successfully!';
-    if (category === 'Cricket') successMsg = 'Verification successful! Get ready for the match.';
-    else if (category === 'Concert') successMsg = 'VIP Pass verified! Enjoy the show.';
+    if (category === 'Cricket') {
+      const league = ticket.cricketLeague || cricketLeague;
+      successMsg = `${league} ticket verified! Get ready for the match. 🏏`;
+    } else if (category === 'Concert') {
+      successMsg = 'VIP Pass verified! Enjoy the show.';
+    }
 
     res.status(200).json({
       success: true,
@@ -80,6 +112,7 @@ const registerTicket = async (req, res, next) => {
     next(error);
   }
 };
+
 
 /**
  * Get user's registered tickets

@@ -1,4 +1,5 @@
 const User = require('../models/User');
+const Admin = require('../models/Admin');
 const { generateToken } = require('../utils/generateToken');
 const googleAuth = require('../config/google');
 
@@ -198,10 +199,51 @@ const logout = async (req, res, next) => {
   }
 };
 
+/**
+ * Login specifically for Staff/Admin (Checks StaffCards collection)
+ * @route POST /api/auth/admin/login
+ */
+const adminLogin = async (req, res, next) => {
+  try {
+    const { email, password } = req.body;
+    const normalizedEmail = email.toLowerCase().trim();
+
+    const admin = await Admin.findOne({ email: normalizedEmail }).select('+password');
+    if (!admin) {
+      return res.status(401).json({ success: false, message: 'Invalid Staff Credentials' });
+    }
+
+    const isMatch = await admin.comparePassword(password);
+    
+    if (!isMatch) {
+      return res.status(401).json({ success: false, message: 'Invalid Staff Credentials' });
+    }
+
+    // Generate token
+    const token = generateToken(admin._id);
+
+    res.status(200).json({
+      success: true,
+      token,
+      user: {
+        _id: admin._id,
+        name: admin.name,
+        email: admin.email,
+        role: 'admin',
+        accessLevel: admin.accessLevel,
+        staffId: admin.staffId
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   register,
   login,
   googleLogin,
   getCurrentUser,
   logout,
+  adminLogin,
 };

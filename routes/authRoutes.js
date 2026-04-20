@@ -6,6 +6,7 @@ const {
   googleLogin,
   getCurrentUser,
   logout,
+  adminLogin
 } = require('../controllers/authController');
 const { protect } = require('../middleware/authMiddleware');
 const { authLimiter } = require('../middleware/rateLimit');
@@ -20,6 +21,7 @@ const {
 router.post('/register', authLimiter, validateRegister, checkValidation, register);
 router.post('/login', authLimiter, validateLogin, checkValidation, login);
 router.post('/google', authLimiter, validateGoogleLogin, checkValidation, googleLogin);
+router.post('/admin/login', authLimiter, adminLogin);
 
 // Protected routes
 router.get('/me', protect, getCurrentUser);

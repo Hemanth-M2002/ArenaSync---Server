@@ -1,5 +1,6 @@
 const { verifyToken } = require('../utils/generateToken');
 const User = require('../models/User');
+const Admin = require('../models/Admin');
 
 /**
  * Authentication middleware
@@ -28,18 +29,24 @@ const protect = async (req, res, next) => {
     // Verify token
     const decoded = verifyToken(token);
     
-    // Check if user still exists
-    const user = await User.findById(decoded.id).select('-password');
+    // Check both collections for the identity
+    let identity = await User.findById(decoded.id).select('-password');
+    let isStaff = false;
+
+    if (!identity) {
+      identity = await Admin.findById(decoded.id).select('-password');
+      if (identity) isStaff = true;
+    }
     
-    if (!user) {
+    if (!identity) {
       return res.status(401).json({
         success: false,
-        message: 'User no longer exists. Please login again.',
+        message: 'Account no longer exists. Please login again.',
       });
     }
 
     // Attach user to request object
-    req.user = user;
+    req.user = identity;
     next();
   } catch (error) {
     console.error('Auth middleware error:', error.message);
